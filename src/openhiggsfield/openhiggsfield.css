@@ -3771,3 +3771,50 @@ a.ohf-btn-solid {
   font-size: 10px;
   color: rgba(255,255,255,.48);
 }
+
+/* Seven Days production states */
+.ohf-approved-badge {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(209,254,23,.32);
+  border-radius: 999px;
+  background: rgba(10,10,11,.72);
+  backdrop-filter: blur(10px);
+  color: #d1fe17;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.ohf-viewer-primary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.ohf-cta.ohf-viewer-recreate {
+  width: auto;
+}
+
+.ohf-btn-solid.ohf-viewer-approve {
+  height: 40px;
+  min-width: 100px;
+  justify-content: center;
+  margin-top: 0;
+  background: var(--s3);
+  border-color: var(--line-2);
+  color: var(--tx1);
+}
+
+.ohf-btn-solid.ohf-viewer-approve[data-on="true"] {
+  background: rgba(209,254,23,.12);
+  border-color: rgba(209,254,23,.38);
+  color: #d1fe17;
+}
