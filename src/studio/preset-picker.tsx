@@ -1,14 +1,18 @@
 "use client";
 
-import { CREATIVE_PRESETS, type CreativePresetId } from "@/creative/presets";
+import { CREATIVE_PRESETS } from "@/creative/presets";
+import { applyCreativePreset } from "@/creative/studio-controller";
+import { useStudio } from "@/creative/studio-store";
 
-export function PresetPicker({
-  value,
-  onChange,
-}: {
-  value: CreativePresetId;
-  onChange: (id: CreativePresetId) => void;
-}) {
+export function PresetPicker() {
+  const value = useStudio((state) => state.preset);
+  const setPreset = useStudio((state) => state.setPreset);
+
+  function choose(id: typeof value) {
+    setPreset(id);
+    applyCreativePreset(id);
+  }
+
   return (
     <section className="studio-panel" aria-label="Creative type">
       <div className="studio-panel__eyebrow">What are you creating?</div>
@@ -19,7 +23,7 @@ export function PresetPicker({
             type="button"
             className="studio-preset"
             data-active={value === preset.id}
-            onClick={() => onChange(preset.id)}
+            onClick={() => choose(preset.id)}
           >
             <span className="studio-preset__label">{preset.label}</span>
             <span className="studio-preset__desc">{preset.description}</span>
