@@ -35,5 +35,12 @@ export function fileNameFor(record: RunRecord, index: number): string {
       .replace(/^-+|-+$/g, "")
       .slice(0, 44)
       .replace(/-+$/, "") || "run";
-  return `openhiggsfield-${slug}-${index + 1}.${ext ?? (record.kind === "video" ? "mp4" : "png")}`;
+  const client =
+    record.studio?.workspaceName
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 28) || "seven-days";
+  const type = record.studio?.presetId ?? record.kind;
+  return `${client}-${type}-${slug}-${index + 1}.${ext ?? (record.kind === "video" ? "mp4" : "png")}`;
 }
