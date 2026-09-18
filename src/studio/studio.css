@@ -1,6 +1,9 @@
 .studio-dashboard {
   min-height: 100vh;
   display: grid;
+  font-family: var(--font-ohf-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
   background: #0a0a0b;
   color: #f7f7f2;
@@ -198,3 +201,9 @@
 .studio-input { font-size: 14px; line-height: 1.35; }
 .studio-preset { min-height: 104px; padding: 14px; }
 .studio-panel { padding: 18px; }
+
+
+/* Keep the client rail on the same Inter UI system as the generation canvas. */
+.studio-dashboard :is(button, input, textarea, select) {
+  font-family: inherit;
+}
