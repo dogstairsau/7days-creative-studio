@@ -27,15 +27,31 @@ The app already includes:
 
 ## V1 direction
 
-The V1 workstream adds:
+The V1 workstream now includes:
 
 - Seven Days branding
 - provider abstraction
-- Kie.ai support
+- Kie.ai server provider
 - client workspaces
 - client brand kits
+- automatic brand-context injection
 - task-first generation presets
-- approvals and production export
+- preset-driven model and aspect-ratio setup
+- per-run client and creative-type metadata
+- approve-for-client state
+- client-aware production filenames
+
+### Kie.ai status
+
+When `KIE_API_KEY` is present, the studio automatically uses Kie.ai and no browser API key is required.
+
+The first production mapping is intentionally narrow:
+
+- `flux-2` text-to-image → `flux-2/pro-text-to-image`
+- `flux-2` with references → `flux-2/pro-image-to-image`
+- status polling → `/api/v1/jobs/recordInfo`
+
+The rest of the model catalog still uses the legacy provider until its Kie adapters are added.
 
 ## Local setup
 
