@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { currentStudioRunContext, enrichGenerationPlane } from "@/creative/generation-context";
-import { hasPlatformCredentials, submitGeneration } from "@/generation/actions";
+import { getGenerationProviderInfo, submitGeneration } from "@/generation/actions";
 import { MissingCredentialsError } from "@/generation/credentials";
 import { MODELS, getModel } from "@/generation/catalog";
 import type { Surface } from "@/generation/catalog";
@@ -185,6 +185,8 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState<SaveProgress | null>(null);
   const [keyConfigured, setKeyConfigured] = useState(false);
+  const [providerLabel, setProviderLabel] = useState("No provider");
+  const [providerManaged, setProviderManaged] = useState(false);
   const [keysOpen, setKeysOpen] = useState(false);
 
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -226,9 +228,11 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   }, [historyLoaded, history]);
 
   useEffect(() => {
-    void hasPlatformCredentials().then((ready) => {
-      setKeyConfigured(ready);
-      if (!ready) setKeysOpen(true);
+    void getGenerationProviderInfo().then((provider) => {
+      setKeyConfigured(provider.configured);
+      setProviderLabel(provider.label);
+      setProviderManaged(provider.managed);
+      if (!provider.configured) setKeysOpen(true);
     });
   }, []);
 
@@ -612,7 +616,9 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   );
 
   const openViewer = useCallback((id: string) => setViewerId(id), []);
-  const openKeys = useCallback(() => setKeysOpen(true), []);
+  const openKeys = useCallback(() => {
+    if (!providerManaged) setKeysOpen(true);
+  }, [providerManaged]);
   const runGenerate = useCallback(() => void generate(), [generate]);
   const downloadSelection = useCallback(() => void downloadPicked(), [downloadPicked]);
   const dismissDeleted = useCallback(() => setDeleted(null), []);
@@ -645,6 +651,8 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onView={switchView}
             busy={busy}
             keyConfigured={keyConfigured}
+            providerLabel={providerLabel}
+            providerManaged={providerManaged}
             onKeys={openKeys}
           />
 
@@ -720,11 +728,15 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onClose={() => setKeysOpen(false)}
             onSaved={() => {
               setKeyConfigured(true);
+              setProviderLabel("Generation API");
+              setProviderManaged(false);
               setKeysOpen(false);
               setError(null);
             }}
             onCleared={() => {
               setKeyConfigured(false);
+              setProviderLabel("No provider");
+              setProviderManaged(false);
             }}
           />
         )}
