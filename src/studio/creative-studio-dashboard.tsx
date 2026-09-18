@@ -1,22 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 
-import { getCreativePreset, type CreativePresetId } from "@/creative/presets";
+import { getCreativePreset } from "@/creative/presets";
+import { applyCreativePreset } from "@/creative/studio-controller";
+import { activeWorkspace, useStudio } from "@/creative/studio-store";
 
 import { OpenHiggsfieldApp } from "@/openhiggsfield/openhiggsfield-app";
 import { PresetPicker } from "./preset-picker";
 import { WorkspacePanel } from "./workspace-panel";
 
 export function CreativeStudioDashboard({ fontClassName = "" }: { fontClassName?: string }) {
-  const [preset, setPreset] = useState<CreativePresetId>("website-hero");
+  const preset = useStudio((state) => state.preset);
+  const workspaces = useStudio((state) => state.workspaces);
+  const activeWorkspaceId = useStudio((state) => state.activeWorkspaceId);
   const selected = getCreativePreset(preset);
+  const workspace =
+    workspaces.find((entry) => entry.id === activeWorkspaceId) ?? activeWorkspace();
+
+  useEffect(() => {
+    applyCreativePreset(preset);
+  }, [preset]);
 
   return (
     <div className={`studio-dashboard ${fontClassName}`}>
       <div className="studio-dashboard__rail">
         <WorkspacePanel />
-        <PresetPicker value={preset} onChange={setPreset} />
+        <PresetPicker />
 
         <section className="studio-panel studio-panel--brief">
           <div className="studio-panel__eyebrow">Creative direction</div>
@@ -28,6 +38,12 @@ export function CreativeStudioDashboard({ fontClassName = "" }: { fontClassName?
           {selected.compositionHint && (
             <div className="studio-chip">Composition: {selected.compositionHint}</div>
           )}
+          <div className="studio-context-status">
+            <span className="studio-context-status__dot" />
+            {workspace
+              ? `${workspace.name} brand context will be added automatically on Generate.`
+              : "Add a client workspace to inject brand context automatically."}
+          </div>
         </section>
       </div>
 
