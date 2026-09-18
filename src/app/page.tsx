@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
-import { OpenHiggsfieldApp } from "@/openhiggsfield/openhiggsfield-app";
+import { CreativeStudioDashboard } from "@/studio/creative-studio-dashboard";
 
 import "@/openhiggsfield/openhiggsfield.css";
+import "@/studio/studio.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,5 +17,5 @@ export const metadata: Metadata = {
 };
 
 export default function CreativeStudioPage() {
-  return <OpenHiggsfieldApp fontClassName={inter.variable} />;
+  return <CreativeStudioDashboard fontClassName={inter.variable} />;
 }
