@@ -28,8 +28,6 @@ export function Topbar({
   const tabsRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState<{ x: number; w: number } | null>(null);
 
-  /* The indicator is measured rather than derived from equal columns, so it
-     morphs to each label's real width instead of padding the short ones. */
   useEffect(() => {
     const tabs = tabsRef.current;
     if (!tabs) return;
@@ -41,7 +39,6 @@ export function Topbar({
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(tabs);
-    // Inter swaps in after first paint and the labels resize under it.
     void document.fonts.ready.then(measure);
     return () => {
       live = false;
@@ -72,7 +69,13 @@ export function Topbar({
 
   return (
     <div className="ohf-topbar">
-      <h1 className="ohf-sr">OpenHiggsfield AI — Open source AI studio</h1>
+      <div className="ohf-brand ohf-enter-1" aria-label="Seven Days Creative Studio">
+        <div className="ohf-brand-mark" aria-hidden>7D</div>
+        <div className="ohf-brand-copy">
+          <strong>Creative Studio</strong>
+          <span>Seven Days To Launch</span>
+        </div>
+      </div>
 
       <div className="ohf-bar ohf-enter-1">
         <div
@@ -106,8 +109,6 @@ export function Topbar({
                 tabIndex={selected ? 0 : -1}
                 className="ohf-tab"
                 data-view={id}
-                /* Favorites is the one scope that goes icon-only on a narrow
-                   pill, so its name is stated rather than left to the mark. */
                 aria-label={VIEW_LABELS[id]}
                 title={id === "favorites" ? VIEW_LABELS[id] : undefined}
                 onClick={() => onView(id)}
@@ -120,9 +121,6 @@ export function Topbar({
         </div>
       </div>
 
-      {/* Generations run on the visitor's own platform key, so this both states
-          whether one is held and opens the modal that sets it — and its lamp is
-          the studio's liveness, the one place accent moves. */}
       <div className="ohf-bar ohf-enter-1">
         <button
           type="button"
@@ -130,11 +128,11 @@ export function Topbar({
           data-busy={busy}
           data-ready={keyConfigured}
           onClick={onKeys}
-          aria-label={keyConfigured ? "Edit platform key" : "Add platform key"}
-          title={keyConfigured ? "Edit platform key" : "Add platform key"}
+          aria-label={keyConfigured ? "Edit generation provider key" : "Add generation provider key"}
+          title={keyConfigured ? "Edit generation provider key" : "Add generation provider key"}
         >
           <KeyIcon />
-          <span className="ohf-key-text">{keyConfigured ? "Your key" : "Add key"}</span>
+          <span className="ohf-key-text">{keyConfigured ? "Provider ready" : "Add provider key"}</span>
           <span className="ohf-lamp" />
         </button>
       </div>
