@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { hasPlatformCredentials, submitGeneration } from "@/generation/actions";
+import { currentStudioRunContext, enrichGenerationPlane } from "@/creative/generation-context";
+import { getGenerationProviderInfo, submitGeneration } from "@/generation/actions";
 import { MissingCredentialsError } from "@/generation/credentials";
 import { MODELS, getModel } from "@/generation/catalog";
 import type { Surface } from "@/generation/catalog";
@@ -54,6 +55,7 @@ type RunDraft = {
   meta: string;
   badge?: string;
   settings?: Record<string, unknown>;
+  studio?: RunRecord["studio"];
   createdAt: number;
 };
 
@@ -77,6 +79,7 @@ function draftOf(record: RunRecord): RunDraft {
     meta: record.meta,
     badge: record.badge,
     settings: record.settings,
+    studio: record.studio,
     createdAt: record.createdAt,
   };
 }
@@ -100,6 +103,7 @@ function runningRows(requestId: string, count: number, draft: RunDraft): RunReco
       art: artFor(draft.surface, hueOf(id), id),
       createdAt: draft.createdAt,
       settings: draft.settings,
+      studio: draft.studio,
     };
   });
 }
@@ -130,6 +134,7 @@ function terminalRows(requestId: string, draft: RunDraft, status: GenerationStat
       art: artFor(draft.surface, hueOf(id), id),
       createdAt: draft.createdAt,
       settings: draft.settings,
+      studio: draft.studio,
     };
   });
 }
@@ -180,6 +185,8 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState<SaveProgress | null>(null);
   const [keyConfigured, setKeyConfigured] = useState(false);
+  const [providerLabel, setProviderLabel] = useState("No provider");
+  const [providerManaged, setProviderManaged] = useState(false);
   const [keysOpen, setKeysOpen] = useState(false);
 
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -221,9 +228,11 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   }, [historyLoaded, history]);
 
   useEffect(() => {
-    void hasPlatformCredentials().then((ready) => {
-      setKeyConfigured(ready);
-      if (!ready) setKeysOpen(true);
+    void getGenerationProviderInfo().then((provider) => {
+      setKeyConfigured(provider.configured);
+      setProviderLabel(provider.label);
+      setProviderManaged(provider.managed);
+      if (!provider.configured) setKeysOpen(true);
     });
   }, []);
 
@@ -329,16 +338,18 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
       setError("Add your platform key to generate.");
       return;
     }
-    const plane = assemblePlane();
-    if (!plane.prompt.text.trim()) return;
+    const basePlane = assemblePlane();
+    if (!basePlane.prompt.text.trim()) return;
 
-    const entry = getModel(plane.model);
+    const plane = enrichGenerationPlane(basePlane);
+    const studio = currentStudioRunContext();
+    const entry = getModel(basePlane.model);
     const ratio = ratioToCss(
-      plane.settings.aspectRatio,
+      basePlane.settings.aspectRatio,
       entry.surface === "image" ? "4 / 3" : "16 / 9",
     );
-    const meta = metaOf(entry, plane.settings);
-    const badge = entry.surface === "video" ? durationBadge(plane.settings) : undefined;
+    const meta = metaOf(entry, basePlane.settings);
+    const badge = entry.surface === "video" ? durationBadge(basePlane.settings) : undefined;
 
     /* Batch size resolves to results, not to requests. A model that carries its
        own count answers one request with that many media; every other model is
@@ -346,7 +357,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
        skeletons, and each request clears the ones it owns. */
     const native = countSetting(entry);
     const expected = native
-      ? Math.max(1, Number(plane.settings[native.key]) || 1)
+      ? Math.max(1, Number(basePlane.settings[native.key]) || 1)
       : useActive.getState().batch;
     const startedAt = Date.now();
     const seq = ++press.current;
@@ -364,11 +375,12 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
       surface: entry.surface,
       modelId: entry.id,
       modelLabel: entry.label,
-      prompt: plane.prompt.text.trim(),
+      prompt: basePlane.prompt.text.trim(),
       ratio,
       meta,
       badge,
-      settings: plane.settings,
+      settings: basePlane.settings,
+      studio,
       createdAt: startedAt,
     };
 
@@ -423,6 +435,14 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
     setHistory((prev) =>
       prev.map((entry) =>
         entry.id === record.id ? { ...entry, favorite: !entry.favorite } : entry,
+      ),
+    );
+  }, []);
+
+  const toggleApproved = useCallback((record: RunRecord) => {
+    setHistory((prev) =>
+      prev.map((entry) =>
+        entry.id === record.id ? { ...entry, approved: !entry.approved } : entry,
       ),
     );
   }, []);
@@ -596,7 +616,9 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   );
 
   const openViewer = useCallback((id: string) => setViewerId(id), []);
-  const openKeys = useCallback(() => setKeysOpen(true), []);
+  const openKeys = useCallback(() => {
+    if (!providerManaged) setKeysOpen(true);
+  }, [providerManaged]);
   const runGenerate = useCallback(() => void generate(), [generate]);
   const downloadSelection = useCallback(() => void downloadPicked(), [downloadPicked]);
   const dismissDeleted = useCallback(() => setDeleted(null), []);
@@ -629,6 +651,8 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onView={switchView}
             busy={busy}
             keyConfigured={keyConfigured}
+            providerLabel={providerLabel}
+            providerManaged={providerManaged}
             onKeys={openKeys}
           />
 
@@ -689,6 +713,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onClose={() => setViewerId(null)}
             onReuse={() => retry(viewerItem)}
             onFavorite={() => toggleFavorite(viewerItem)}
+            onApprove={() => toggleApproved(viewerItem)}
             /* The viewer is released along with the run, so undoing the
                delete restores it to the grid and not back over the studio. */
             onDelete={() => {
@@ -703,11 +728,15 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onClose={() => setKeysOpen(false)}
             onSaved={() => {
               setKeyConfigured(true);
+              setProviderLabel("Generation API");
+              setProviderManaged(false);
               setKeysOpen(false);
               setError(null);
             }}
             onCleared={() => {
               setKeyConfigured(false);
+              setProviderLabel("No provider");
+              setProviderManaged(false);
             }}
           />
         )}

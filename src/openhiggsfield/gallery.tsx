@@ -254,6 +254,12 @@ const Tile = memo(function Tile({
           {item.badge}
         </span>
       )}
+      {item.approved && (
+        <span className="ohf-approved-badge">
+          <CheckIcon size={11} />
+          Approved
+        </span>
+      )}
       {/* The run signs itself only while the card is under the cursor, the same
           bargain the action rail makes — an un-hovered grid is nothing but the
           work. What distinguishes two cards of the same model is the words that

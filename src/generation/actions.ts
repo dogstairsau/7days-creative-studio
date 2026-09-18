@@ -12,9 +12,9 @@ import {
   encodeCredentials,
   parseCredentialInput,
 } from "./credentials";
-import { createPlatformClient } from "./platform";
 import type { StatusResult } from "./platform";
-import { toPlatform } from "./to-platform";
+import { createKieProvider } from "./providers/kie";
+import { createLegacyProvider } from "./providers";
 
 export async function savePlatformCredentials(data: unknown) {
   const { apiKey } = parseCredentialInput(data);
@@ -28,7 +28,21 @@ export async function clearPlatformCredentials() {
 }
 
 export async function hasPlatformCredentials() {
+  if (process.env.KIE_API_KEY?.trim()) return true;
   return (await readStoredCredentials()) !== null;
+}
+
+export async function getGenerationProviderInfo() {
+  if (process.env.KIE_API_KEY?.trim()) {
+    return { configured: true, id: "kie", label: "Kie.ai", managed: true };
+  }
+  const stored = await readStoredCredentials();
+  return {
+    configured: stored !== null,
+    id: "legacy",
+    label: stored ? "Generation API" : "No provider",
+    managed: false,
+  };
 }
 
 export async function submitGeneration(plane: GenerationPlane) {
@@ -37,8 +51,7 @@ export async function submitGeneration(plane: GenerationPlane) {
     ...plane,
     settings: parseSettings(model, plane.settings),
   };
-  const { path, body } = toPlatform(parsed);
-  return createPlatformClient(await readCredentials()).submit(path, body);
+  return (await readProvider()).submit(parsed);
 }
 
 /** Every request in flight, answered in one round trip. Next dispatches server
@@ -47,16 +60,28 @@ export async function submitGeneration(plane: GenerationPlane) {
     genuinely parallel. */
 export async function getGenerationStatuses(data: unknown): Promise<StatusResult[]> {
   const requestIds = parseRequestIds(data);
-  const client = createPlatformClient(await readCredentials());
+  const provider = await readProvider();
   return Promise.all(
     requestIds.map(async (requestId): Promise<StatusResult> => {
       try {
-        return { requestId, status: await client.status(requestId) };
+        return { requestId, status: await provider.status(requestId) };
       } catch (caught) {
         return { requestId, error: caught instanceof Error ? caught.message : String(caught) };
       }
     }),
   );
+}
+
+
+async function readProvider() {
+  const kieKey = process.env.KIE_API_KEY?.trim();
+  if (kieKey) {
+    return createKieProvider({
+      apiKey: kieKey,
+      baseUrl: process.env.KIE_API_BASE_URL?.trim() || "https://api.kie.ai",
+    });
+  }
+  return createLegacyProvider(await readCredentials());
 }
 
 async function readStoredCredentials() {

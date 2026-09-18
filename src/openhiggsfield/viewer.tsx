@@ -44,6 +44,7 @@ export function Viewer({
   onClose,
   onReuse,
   onFavorite,
+  onApprove,
   onDelete,
   onPrev,
   onNext,
@@ -52,6 +53,7 @@ export function Viewer({
   onClose: () => void;
   onReuse: () => void;
   onFavorite: () => void;
+  onApprove: () => void;
   onDelete: () => void;
   /* Absent at the ends of the scope, which is how the walk stops. */
   onPrev?: () => void;
@@ -276,6 +278,18 @@ export function Viewer({
                   <dt>Model</dt>
                   <dd>{item.modelLabel}</dd>
                 </div>
+                {item.studio?.workspaceName && (
+                  <div className="ohf-viewer-fact">
+                    <dt>Client</dt>
+                    <dd>{item.studio.workspaceName}</dd>
+                  </div>
+                )}
+                {item.studio?.presetLabel && (
+                  <div className="ohf-viewer-fact">
+                    <dt>Creative type</dt>
+                    <dd>{item.studio.presetLabel}</dd>
+                  </div>
+                )}
                 {facts.map(([label, value]) => (
                   <div className="ohf-viewer-fact" key={label}>
                     <dt>{label}</dt>
@@ -293,14 +307,26 @@ export function Viewer({
           <footer className="ohf-viewer-side-foot">
             {/* Recreate is the loop the studio is built on: it loads this run's
                 model, dials and words back into the composer. */}
-            <button
-              type="button"
-              className="ohf-cta ohf-viewer-recreate"
-              onClick={() => leave(onReuse)}
-            >
-              <RetryIcon />
-              Recreate
-            </button>
+            <div className="ohf-viewer-primary-actions">
+              <button
+                type="button"
+                className="ohf-cta ohf-viewer-recreate"
+                onClick={() => leave(onReuse)}
+              >
+                <RetryIcon />
+                Recreate
+              </button>
+              <button
+                type="button"
+                className="ohf-btn-solid ohf-viewer-approve"
+                data-on={item.approved === true}
+                aria-pressed={item.approved === true}
+                onClick={onApprove}
+              >
+                <CheckIcon size={13} />
+                {item.approved ? "Approved" : "Approve"}
+              </button>
+            </div>
             {/* Names the refusal and the way past it: the same press, now
                 falling through to the anchor's own navigation, hands the file
                 to a tab the browser can save from. */}
