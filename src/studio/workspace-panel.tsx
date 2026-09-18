@@ -1,49 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  createWorkspace,
-  loadWorkspaces,
-  saveWorkspaces,
-  type ClientWorkspace,
-} from "@/creative/workspaces";
+import { useStudio } from "@/creative/studio-store";
 
 export function WorkspacePanel() {
-  const [workspaces, setWorkspaces] = useState<ClientWorkspace[]>([]);
-  const [activeId, setActiveId] = useState<string>("");
+  const workspaces = useStudio((state) => state.workspaces);
+  const activeWorkspaceId = useStudio((state) => state.activeWorkspaceId);
+  const addWorkspace = useStudio((state) => state.addWorkspace);
+  const setActiveWorkspace = useStudio((state) => state.setActiveWorkspace);
+  const updateActiveWorkspace = useStudio((state) => state.updateActiveWorkspace);
   const [name, setName] = useState("");
 
-  useEffect(() => {
-    const saved = loadWorkspaces();
-    setWorkspaces(saved);
-    setActiveId(saved[0]?.id ?? "");
-  }, []);
-
   const active = useMemo(
-    () => workspaces.find((workspace) => workspace.id === activeId) ?? null,
-    [workspaces, activeId],
+    () =>
+      workspaces.find((workspace) => workspace.id === activeWorkspaceId) ??
+      workspaces[0] ??
+      null,
+    [workspaces, activeWorkspaceId],
   );
 
-  function addWorkspace() {
+  function add() {
     if (!name.trim()) return;
-    const workspace = createWorkspace(name);
-    const next = [workspace, ...workspaces];
-    setWorkspaces(next);
-    setActiveId(workspace.id);
+    addWorkspace(name);
     setName("");
-    saveWorkspaces(next);
-  }
-
-  function patchActive(patch: Partial<ClientWorkspace>) {
-    if (!active) return;
-    const next = workspaces.map((workspace) =>
-      workspace.id === active.id
-        ? { ...workspace, ...patch, updatedAt: Date.now() }
-        : workspace,
-    );
-    setWorkspaces(next);
-    saveWorkspaces(next);
   }
 
   return (
@@ -59,8 +39,8 @@ export function WorkspacePanel() {
         {workspaces.length > 0 && (
           <select
             className="studio-input studio-input--select"
-            value={activeId}
-            onChange={(event) => setActiveId(event.target.value)}
+            value={active?.id ?? ""}
+            onChange={(event) => setActiveWorkspace(event.target.value)}
             aria-label="Choose client workspace"
           >
             {workspaces.map((workspace) => (
@@ -80,10 +60,10 @@ export function WorkspacePanel() {
             placeholder="Client name"
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") addWorkspace();
+              if (event.key === "Enter") add();
             }}
           />
-          <button type="button" className="studio-button" onClick={addWorkspace}>
+          <button type="button" className="studio-button" onClick={add}>
             Add client
           </button>
         </div>
@@ -95,7 +75,7 @@ export function WorkspacePanel() {
               className="studio-input"
               value={active.website ?? ""}
               placeholder="https://"
-              onChange={(event) => patchActive({ website: event.target.value })}
+              onChange={(event) => updateActiveWorkspace({ website: event.target.value })}
             />
           </label>
 
@@ -105,7 +85,7 @@ export function WorkspacePanel() {
               className="studio-input studio-textarea"
               value={active.summary ?? ""}
               placeholder="What does this brand do and who is it for?"
-              onChange={(event) => patchActive({ summary: event.target.value })}
+              onChange={(event) => updateActiveWorkspace({ summary: event.target.value })}
             />
           </label>
 
@@ -115,7 +95,9 @@ export function WorkspacePanel() {
               className="studio-input studio-textarea"
               value={active.visualDirection ?? ""}
               placeholder="Premium, minimal, architectural, playful..."
-              onChange={(event) => patchActive({ visualDirection: event.target.value })}
+              onChange={(event) =>
+                updateActiveWorkspace({ visualDirection: event.target.value })
+              }
             />
           </label>
 
@@ -126,7 +108,7 @@ export function WorkspacePanel() {
               value={active.colours.join(", ")}
               placeholder="#111111, #F4F2EC"
               onChange={(event) =>
-                patchActive({
+                updateActiveWorkspace({
                   colours: event.target.value
                     .split(",")
                     .map((value) => value.trim())
@@ -143,8 +125,25 @@ export function WorkspacePanel() {
               value={active.fonts.join(", ")}
               placeholder="Graphik, Inter"
               onChange={(event) =>
-                patchActive({
+                updateActiveWorkspace({
                   fonts: event.target.value
+                    .split(",")
+                    .map((value) => value.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
+          </label>
+
+          <label>
+            <span>Avoid</span>
+            <input
+              className="studio-input"
+              value={active.doNot.join(", ")}
+              placeholder="Stock-photo look, gradients, busy backgrounds"
+              onChange={(event) =>
+                updateActiveWorkspace({
+                  doNot: event.target.value
                     .split(",")
                     .map((value) => value.trim())
                     .filter(Boolean),
