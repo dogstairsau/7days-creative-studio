@@ -169,3 +169,25 @@
     border-bottom: 1px solid rgba(255,255,255,.08);
   }
 }
+
+.studio-context-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  font-size: 10px;
+  line-height: 1.45;
+  color: rgba(255,255,255,.48);
+}
+
+.studio-context-status__dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: #d1fe17;
+  box-shadow: 0 0 0 3px rgba(209,254,23,.08);
+}
