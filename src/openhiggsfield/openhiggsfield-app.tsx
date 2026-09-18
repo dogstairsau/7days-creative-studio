@@ -435,6 +435,14 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
     );
   }, []);
 
+  const toggleApproved = useCallback((record: RunRecord) => {
+    setHistory((prev) =>
+      prev.map((entry) =>
+        entry.id === record.id ? { ...entry, approved: !entry.approved } : entry,
+      ),
+    );
+  }, []);
+
   const deleteRuns = useCallback((records: RunRecord[]) => {
     if (records.length === 0) return;
     const ids = new Set(records.map((record) => record.id));
@@ -697,6 +705,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onClose={() => setViewerId(null)}
             onReuse={() => retry(viewerItem)}
             onFavorite={() => toggleFavorite(viewerItem)}
+            onApprove={() => toggleApproved(viewerItem)}
             /* The viewer is released along with the run, so undoing the
                delete restores it to the grid and not back over the studio. */
             onDelete={() => {
