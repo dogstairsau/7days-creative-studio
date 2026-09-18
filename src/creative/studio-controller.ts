@@ -2,7 +2,6 @@
 
 import { getModel } from "@/generation/catalog";
 import { useActive } from "@/generation/stores/active";
-import { useImagePrompt } from "@/generation/stores/prompt";
 import { useSettings } from "@/generation/stores/settings";
 
 import { getCreativePreset, type CreativePresetId } from "./presets";
@@ -30,10 +29,5 @@ export function applyCreativePreset(id: CreativePresetId) {
         useSettings.getState().set(model.id, { aspectRatio: preset.ratioHint });
       }
     }
-  }
-
-  const prompt = useImagePrompt.getState();
-  if (!prompt.text.trim() && preset.defaultPrompt) {
-    prompt.setText(preset.defaultPrompt);
   }
 }
