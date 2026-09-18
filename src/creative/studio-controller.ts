@@ -11,8 +11,8 @@ const MODEL_FOR_PRESET: Partial<Record<CreativePresetId, string>> = {
   "product-shot": "flux-2",
   lifestyle: "flux-2",
   "section-image": "flux-2",
-  "ad-creative": "ideogram-4",
-  social: "ideogram-4",
+  "ad-creative": "flux-2",
+  social: "flux-2",
 };
 
 export function applyCreativePreset(id: CreativePresetId) {
