@@ -71,3 +71,7 @@ NEXT_PUBLIC_SITE_URL=
 ```
 
 The existing OpenHiggsfield provider remains available while the Kie adapter is introduced behind the provider layer.
+
+## Deployment
+
+GitHub is connected to Vercel. Pushes to `main` deploy to Production and pushes to feature branches create Preview deployments.
