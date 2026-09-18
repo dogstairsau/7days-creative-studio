@@ -30,7 +30,7 @@ export function enrichGenerationPlane(plane: GenerationPlane): GenerationPlane {
   const brief = [
     preset.defaultPrompt,
     preset.compositionHint ? `Composition requirement: ${preset.compositionHint}.` : "",
-    workspace ? buildBrandPrompt(workspace) : "",
+    workspace ? buildBrandPrompt({ ...workspace, clientName: workspace.name }) : "",
   ]
     .filter(Boolean)
     .join("\n");
