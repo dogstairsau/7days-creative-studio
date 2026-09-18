@@ -25,6 +25,15 @@ export interface RunRecord {
   createdAt: number;
   /** Kept deliberately: shows in the Favorites scope and outlives the cap. */
   favorite?: boolean;
+  /** Production-ready choice for the client. Approved runs are kept beyond the cap. */
+  approved?: boolean;
+  /** Client and creative-task context captured when the run was submitted. */
+  studio?: {
+    workspaceId?: string;
+    workspaceName?: string;
+    presetId: string;
+    presetLabel: string;
+  };
   /** Resolved catalog settings this run was submitted with, so reuse can
       restore the dials and not just the words. Absent on pre-existing records. */
   settings?: Record<string, unknown>;
@@ -103,7 +112,11 @@ export function capHistory(records: RunRecord[], max = MAX_RECORDS): RunRecord[]
   if (records.length <= max) return records;
   let kept = 0;
   return records.filter(
-    (record) => record.favorite === true || record.status === "running" || kept++ < max,
+    (record) =>
+      record.favorite === true ||
+      record.approved === true ||
+      record.status === "running" ||
+      kept++ < max,
   );
 }
 
@@ -150,6 +163,7 @@ function isRunRecord(value: unknown): value is RunRecord {
     typeof record.createdAt === "number" &&
     (record.requestId === undefined || typeof record.requestId === "string") &&
     (record.favorite === undefined || typeof record.favorite === "boolean") &&
+    (record.approved === undefined || typeof record.approved === "boolean") &&
     (record.settings === undefined ||
       (typeof record.settings === "object" && record.settings !== null))
   );
