@@ -8,14 +8,6 @@ type KieProviderOptions = {
   fetch?: typeof fetch;
 };
 
-type KieTaskData = {
-  taskId?: unknown;
-  model?: unknown;
-  state?: unknown;
-  resultJson?: unknown;
-  failMsg?: unknown;
-};
-
 export function createKieProvider(options: KieProviderOptions): GenerationProvider {
   const baseUrl = (options.baseUrl ?? "https://api.kie.ai").replace(/\/$/, "");
   const fetchImpl = options.fetch ?? fetch;
@@ -26,7 +18,6 @@ export function createKieProvider(options: KieProviderOptions): GenerationProvid
       headers: {
         Authorization: `Bearer ${options.apiKey}`,
         "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
       },
     });
 
@@ -72,7 +63,7 @@ export function createKieProvider(options: KieProviderOptions): GenerationProvid
         `/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(requestId)}`,
         { method: "GET" },
       );
-      const data = asRecord(payload.data) as KieTaskData;
+      const data = asRecord(payload.data);
       const state = stringValue(data.state) ?? "waiting";
       const model = stringValue(data.model) ?? "";
       const result = parseResult(data.resultJson);
