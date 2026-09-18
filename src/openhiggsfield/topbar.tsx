@@ -17,12 +17,16 @@ export function Topbar({
   onView,
   busy,
   keyConfigured,
+  providerLabel,
+  providerManaged,
   onKeys,
 }: {
   view: GalleryView;
   onView: (next: GalleryView) => void;
   busy: boolean;
   keyConfigured: boolean;
+  providerLabel: string;
+  providerManaged: boolean;
   onKeys: () => void;
 }) {
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -128,11 +132,26 @@ export function Topbar({
           data-busy={busy}
           data-ready={keyConfigured}
           onClick={onKeys}
-          aria-label={keyConfigured ? "Edit generation provider key" : "Add generation provider key"}
-          title={keyConfigured ? "Edit generation provider key" : "Add generation provider key"}
+          disabled={providerManaged}
+          aria-label={
+            providerManaged
+              ? `${providerLabel} configured on the server`
+              : keyConfigured
+                ? "Edit generation provider key"
+                : "Add generation provider key"
+          }
+          title={
+            providerManaged
+              ? `${providerLabel} configured in Vercel`
+              : keyConfigured
+                ? "Edit generation provider key"
+                : "Add generation provider key"
+          }
         >
           <KeyIcon />
-          <span className="ohf-key-text">{keyConfigured ? "Provider ready" : "Add provider key"}</span>
+          <span className="ohf-key-text">
+            {keyConfigured ? providerLabel : "Add provider key"}
+          </span>
           <span className="ohf-lamp" />
         </button>
       </div>
