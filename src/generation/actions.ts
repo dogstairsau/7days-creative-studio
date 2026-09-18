@@ -32,6 +32,19 @@ export async function hasPlatformCredentials() {
   return (await readStoredCredentials()) !== null;
 }
 
+export async function getGenerationProviderInfo() {
+  if (process.env.KIE_API_KEY?.trim()) {
+    return { configured: true, id: "kie", label: "Kie.ai", managed: true };
+  }
+  const stored = await readStoredCredentials();
+  return {
+    configured: stored !== null,
+    id: "legacy",
+    label: stored ? "Generation API" : "No provider",
+    managed: false,
+  };
+}
+
 export async function submitGeneration(plane: GenerationPlane) {
   const model = getModel(plane.model);
   const parsed: GenerationPlane = {
